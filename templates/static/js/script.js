@@ -1,10 +1,12 @@
-const myBtn = document.querySelector('#myBtn');
-const demo = document.querySelector('#demo');
+window.onresize = function () {
+	var zoomLevel = window.devicePixelRatio;
 
-let count = 0;
-
-myBtn.addEventListener('click', () => {
-	count++;
-	demo.textContent = count;
-});
-
+	if (zoomLevel >= 3) 
+	{
+		document.body.style.overflow = "visible";
+	} 
+	else 
+	{
+		document.body.style.overflow = "hidden"; 
+	}
+};
