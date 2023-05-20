@@ -12,6 +12,7 @@ var inputName = document.querySelector("#inputName")
 var recordStatus = document.querySelector("#recordStatus")
 
 var intervalId;
+var timeoutId;
 
 recordButton.addEventListener("click", startRecording);
 stopButton.addEventListener("click", stopRecording);
@@ -71,11 +72,11 @@ function startRecording() {
         });
 }
 
-const sleep = time => new Promise(resolve => setTimeout(resolve, time));
+const sleep = time => new Promise(resolve => timeoutId = setTimeout(resolve, time));
 
 function stopRecording() {
 
-    recordButton.disabled = false;
+    recordButton.disabled = true;
     stopButton.disabled = true;
 
     recordStatus.innerHTML = "Kayıt İşlemi Durduruldu"
@@ -83,4 +84,5 @@ function stopRecording() {
 
     gumStream.getAudioTracks()[0].stop();
     clearInterval(intervalId)
+    clearTimeout(timeoutId)
 }
