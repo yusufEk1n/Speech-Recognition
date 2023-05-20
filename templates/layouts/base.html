@@ -1,18 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
+
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
-  <title>Main</title>
+  <script src="{{ url_for('static', filename='js/lib/jquery-3.2.1.slim.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/lib/recorder.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/lib/jquery-3.6.4.min.js') }}"></script>
+  <title>Home</title>
 </head>
+
 <body>
-  <div id="myContainer">
+  <main>
     {% block content %}
     {% endblock %}
+    <script src="{{ url_for('static', filename='js/audio_recorder.js') }}"></script>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-  </div>
+  </main>
 </body>
 </html>
