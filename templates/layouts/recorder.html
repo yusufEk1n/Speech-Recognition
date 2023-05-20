@@ -2,6 +2,12 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/lib/bootstrap.min.css') }}">
 
+<nav>
+    <div class="navbar">
+        <a href="{{url_for('index')}}">Anasayfa</a>
+    </div>
+</nav>
+
 <div class="container pt-5">
     <!-- bootstrap card width %100-->
     <div class="card w-100" style="height: 8rem;">

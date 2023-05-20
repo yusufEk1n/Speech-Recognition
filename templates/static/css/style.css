@@ -2,6 +2,20 @@ body {
     overflow: hidden;
 }
 
+.navbar a {
+    float: left;
+    display: block;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    color: black;
+}
+
+.navbar a:hover {
+    text-decoration: none;
+    color: #4C5656;
+}
+
 .card-container {
     display: flex;
     justify-content: space-evenly;
