@@ -58,7 +58,7 @@ function startRecording() {
                         console.log(filename)
                         
                         var request = new XMLHttpRequest();
-                        request.open("POST", "/recordAudio", true);
+                        request.open("POST", "/saveAudio", true);
                         request.send(formData);
                         recordStatus.innerHTML = "Kayıt Edildi"
                     });

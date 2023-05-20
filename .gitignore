@@ -139,3 +139,7 @@ ui-tests/.pnp.*
 .vscode
 venv 
 node_modules
+
+training_set
+trainedfilelist.txt
+training_models

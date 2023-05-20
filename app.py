@@ -19,16 +19,34 @@ def recorder():
     return render_template("layouts/recorder.html")
 
 
-@app.route("/recordAudio", methods=['POST', 'GET'])
-def recordAudio():
-    f = request.files['audio_data']
-    filename = f.filename
+@app.route("/saveAudio", methods=['POST', 'GET'])
+def saveAudio():
+    try:
+        audio_data = request.files['audio_data']
+        filename = audio_data.filename
+        name = filename.split('-')[0]
 
-    print(filename)
+        if not os.path.exists('training_set'):
+            os.makedirs('training_set')
 
-    return jsonify({'message': 'ses kaydedildi'})
+        if not os.path.exists(os.path.join('training_set', name)):
+            os.makedirs(os.path.join('training_set', name))
 
+        WAVE_PATH = os.path.join('training_set', name, filename)
+
+        trainedfilelist = open('trainedfilelist.txt', 'a')
+        trainedfilelist.write(WAVE_PATH + '\n')
+        trainedfilelist.close()
+
+        audio_data.save(WAVE_PATH)
+
+        return jsonify({'message': 'success'})
+
+    except Exception as e:
+        return jsonify({'error': str(e)})
     
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)  
+
+
 
