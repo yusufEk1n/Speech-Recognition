@@ -140,6 +140,6 @@ ui-tests/.pnp.*
 venv 
 node_modules
 
-training_set
-trainedfilelist.txt
-training_models
+ML/training_set
+ML/trainedfilelist.txt
+ML/training_models

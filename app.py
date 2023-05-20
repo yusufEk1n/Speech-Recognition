@@ -26,15 +26,15 @@ def saveAudio():
         filename = audio_data.filename
         name = filename.split('-')[0]
 
-        if not os.path.exists('training_set'):
-            os.makedirs('training_set')
+        if not os.path.exists(os.path.join('ML', 'training_set')):
+            os.makedirs(os.path.join('ML', 'training_set'))
 
-        if not os.path.exists(os.path.join('training_set', name)):
-            os.makedirs(os.path.join('training_set', name))
+        if not os.path.exists(os.path.join('ML', 'training_set', name)):
+            os.makedirs(os.path.join('ML', 'training_set', name))
 
         WAVE_PATH = os.path.join('training_set', name, filename)
 
-        trainedfilelist = open('trainedfilelist.txt', 'a')
+        trainedfilelist = open(os.path.join('ML', 'trainedfilelist.txt'), 'a')
         trainedfilelist.write(WAVE_PATH + '\n')
         trainedfilelist.close()
 
