@@ -18,6 +18,10 @@ def index():
 def recorder():
     return render_template("layouts/recorder.html")
 
+@app.route("/talk", methods=["GET"])
+def talk():
+    return render_template("layouts/talk.html")
+
 
 @app.route("/saveAudio", methods=['POST', 'GET'])
 def saveAudio():
