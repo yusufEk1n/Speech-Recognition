@@ -1,4 +1,39 @@
 {% extends "layouts/base.html" %}
 {% block content %}
-<p>Sohbet Odası</p>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/lib/bootstrap.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/talk.css') }}">
+
+<nav>
+    <div class="navbar">
+        <a href="{{url_for('index')}}">Anasayfa</a>
+    </div>
+</nav>
+
+<div class="container pt-3">
+    <!-- bootstrap card width %100-->
+    <div class="card w-100" style="height: 8rem;">
+        <div class="card-body">
+            <p class="card-text">Bu sayfada ses tanıma denemeleri yapabilirsiniz</p>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="mx-auto">
+            <form class="form-inline">
+                <button class="btn btn-dark mr-3" id="recordButton" disabled>
+                    Kaydı Başlat
+                </button>
+                <button class="btn btn-dark" id="stopButton" disabled>
+                    Kaydı Durdur
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="vh-100 d-flex justify-content-center align-items-center mt-4" style="height: 400px;">
+        <h1 id="recordStatus">...</h1>
+    </div>
+</div>
+
+</div>
 {% endblock %}
