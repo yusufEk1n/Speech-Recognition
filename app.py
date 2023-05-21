@@ -10,7 +10,10 @@ import pandas as pd
 app = Flask(__name__)
 app.static_folder = os.path.abspath(path="templates/static/")
 
-model = pickle.load(open(os.path.join('ML', 'training_models', 'finalized_model.sav'), 'rb'))
+model = None
+
+if os.path.exists(os.path.join('ML', 'training_models', 'finalized_model.sav')):
+    model = pickle.load(open(os.path.join('ML', 'training_models', 'finalized_model.sav'), 'rb'))
 
 @app.route("/", methods=["GET"])
 def index():
@@ -38,7 +41,7 @@ def saveAudio():
         if not os.path.exists(os.path.join('ML', 'training_set', name)):
             os.makedirs(os.path.join('ML', 'training_set', name))
 
-        WAVE_PATH = os.path.join('training_set', name, filename)
+        WAVE_PATH = os.path.join('ML', 'training_set', name, filename)
 
         trainedfilelist = open(os.path.join('ML', 'trainedfilelist.txt'), 'a')
         trainedfilelist.write(WAVE_PATH + '\n')
@@ -54,30 +57,35 @@ def saveAudio():
 
 @app.route("/postSound", methods=['POST', 'GET'])
 def postSound():
-    f = request.files['audio_data']
-    filename = f.filename
+    try:
+        if model is not None:
+            f = request.files['audio_data']
+            filename = f.filename
 
-    features = []
-    audio, rate = librosa.load(f)
+            features = []
+            audio, rate = librosa.load(f)
 
-    y_trimmed, _ = librosa.effects.trim(audio, top_db=20)
+            y_trimmed, _ = librosa.effects.trim(audio, top_db=20)
 
-    if len(y_trimmed) < 4410:
-        return jsonify("")
+            if len(y_trimmed) < 4410:
+                return jsonify("")
 
-    # ses dosyasını 200 milisaniyelik parçalara böl
-    # her bir parçadan mfcc çıkar
-    for i in range(0, len(y_trimmed), 4410):
-        if i+4410 < len(y_trimmed):
-            comph_mfccs = feature_extraction(y_trimmed[i:i+4410], rate)
-            features.append(comph_mfccs)
+            # ses dosyasını 200 milisaniyelik parçalara böl
+            # her bir parçadan mfcc çıkar
+            for i in range(0, len(y_trimmed), 4410):
+                if i+4410 < len(y_trimmed):
+                    comph_mfccs = feature_extraction(y_trimmed[i:i+4410], rate)
+                    features.append(comph_mfccs)
 
-    features = np.array(features).reshape(len(features), -1)
+            features = np.array(features).reshape(len(features), -1)
 
-    result = model.predict(features)
+            result = model.predict(features)
 
-    return jsonify(result.tolist())
-
+            return jsonify(result.tolist())
+        else:
+            return jsonify("")
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
 def feature_extraction(audio, rate):
     mfccs = librosa.feature.mfcc(y=audio, sr=rate, n_mfcc=13)
@@ -88,6 +96,3 @@ def feature_extraction(audio, rate):
     
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True)  
-
-
-
