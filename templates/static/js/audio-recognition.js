@@ -77,9 +77,8 @@ function postToServer(blob) {
         audioContext.decodeAudioData(request.response, function (buffer) {
             var soundData = buffer.getChannelData(0);  // İlk kanalın ses verilerini alır (stereo ise 2. kanal için buffer.getChannelData(1) kullanılabilir)
             var rms = calcRMS(soundData);
-            console.log('Ses şiddeti (RMS):', rms * 1000);
 
-            if(votes.length >= 10)
+            if(votes.length >= 4)
             {
                 console.log(votes);
 
@@ -149,13 +148,13 @@ function calcRMS(soundData) {
 }
 
 function stopRecording() {
-    recordButton.disabled = true;
+    recordButton.disabled = false;
     stopButton.disabled = true;
 
     recordStatus.innerHTML = "Kayıt İşlemi Durduruldu"
-    inputName.disabled = false;
 
     gumStream.getAudioTracks()[0].stop();
     clearInterval(intervalId)
     clearTimeout(timeoutId)
+    votes = [];
 }
