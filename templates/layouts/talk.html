@@ -20,7 +20,7 @@
     <div class="row mt-4">
         <div class="mx-auto">
             <form class="form-inline">
-                <button class="btn btn-dark mr-3" id="recordButton" disabled>
+                <button class="btn btn-dark mr-3" id="recordButton">
                     Kaydı Başlat
                 </button>
                 <button class="btn btn-dark" id="stopButton" disabled>
@@ -36,4 +36,5 @@
 </div>
 
 </div>
+<script src="{{ url_for('static', filename='js/audio-recognition.js') }}"></script>
 {% endblock %}
