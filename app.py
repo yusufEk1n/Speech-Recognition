@@ -27,6 +27,13 @@ def recorder():
 def talk():
     return render_template("layouts/talk.html")
 
+@app.route("/modelIsThere", methods=["GET"])
+def modelIsThere():
+    if model is not None:
+        return jsonify({'message': 'success'})
+    else:
+        return jsonify({'message': 'error'})
+
 
 @app.route("/saveAudio", methods=['POST', 'GET'])
 def saveAudio():
@@ -83,7 +90,7 @@ def postSound():
 
             return jsonify(result.tolist())
         else:
-            return jsonify("")
+            return jsonify({'error': 'error'})
     except Exception as e:
         return jsonify({'error': str(e)})
 

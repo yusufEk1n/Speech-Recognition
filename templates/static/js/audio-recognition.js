@@ -13,38 +13,74 @@ var recordStatus = document.querySelector("#recordStatus")
 var intervalId;
 var timeoutId;
 
+var model = false;
+
 var votes = [];
 
 recordButton.addEventListener("click", startRecording);
 stopButton.addEventListener("click", stopRecording);
 
+
+window.onload = function () {
+    //post to server model is there
+    $.ajax({
+        url: "/modelIsThere",
+        type: "GET",
+        success: function (response) {
+            console.log(response.message)
+            if(response.message == 'success')
+            {
+                model = true;
+            }
+            else
+            {
+                model = false;
+            }
+        },
+        error: function (err) {
+            console.log(err);
+        }
+    });
+}
+
+
 function startRecording() {
+    if(model == true)
+    {
+        recordButton.disabled = true;
+        stopButton.disabled = false;
 
-    recordButton.disabled = true;
-    stopButton.disabled = false;
 
+        navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+            .then(function (stream) {
 
-    navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-        .then(function (stream) {
+                audioContext = new AudioContext();
+                gumStream = stream;
+                input = audioContext.createMediaStreamSource(stream);
 
-            audioContext = new AudioContext();
-            gumStream = stream;
-            input = audioContext.createMediaStreamSource(stream);
+                intervalId = setInterval(async () => {
+                    const recorder = await recordAudio(input)
+                    await recorder.start();
 
-            intervalId = setInterval(async () => {
-                const recorder = await recordAudio(input)
-                await recorder.start();
+                    await sleep(500);
 
-                await sleep(500);
+                    await recorder.stop();
+                }, 200)
 
-                await recorder.stop();
-            }, 200)
+            }).catch(function (err) {
+                recordButton.disabled = false;
+                stopButton.disabled = true;
+                console.log(err)
+            });
+    }
+    else
+    {
+        recordStatus.innerHTML = "Model bulunamadı. Lütfen modeli yükleyiniz."
 
-        }).catch(function (err) {
-            recordButton.disabled = false;
-            stopButton.disabled = true;
-            console.log(err)
-        });
+        sleep(1500).then(() => {
+            recordStatus.innerHTML = "..."
+        })
+    }
 }
 
 const sleep = time => new Promise(resolve => timeoutId = setTimeout(resolve, time));
