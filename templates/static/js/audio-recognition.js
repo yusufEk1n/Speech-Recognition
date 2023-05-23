@@ -16,6 +16,8 @@ var model = false;
 var recognition;
 var recorder;
 
+var prediction = "";
+
 /*
     * Bu event listener ile kayıt butonuna basıldığında kayıt işlemi başlar.
     * Kayıt edilen ses dosyası metne çevrilir.
@@ -32,7 +34,10 @@ recordButton.addEventListener("click", function () {
             .then(function (stream) {
                 
                 // Bu değşken kelime sayısını kontrol etmek için kullanılıyor.
-                var flag = false;
+                var tempWordCount = 0;
+
+                // Bu değişken kelime sayısını tutmak için kullanılıyor.
+                var wordLength = 0;
 
                 // Ses kaydı için gerekli değişkenler tanımlanıyor.
                 audioContext = new AudioContext();
@@ -51,28 +56,39 @@ recordButton.addEventListener("click", function () {
                     // Konuşma metne çevrilir ve text alanına yazılır.
                     var recognizedText = event.results[0][0].transcript;
                     text.innerHTML = recognizedText;
+
+                    wordLength = text.innerHTML.split(" ").length;
                     
-                    // Konuşma metni 1 kelimeden fazla ise tahmin edilmek için server'a gönderilir.
-                    if (recognizedText.split(" ").length > 1 && flag == false) {
-                        flag = true;
-                        recorder.stop();
-                        recorder.exportWAV(postToServer);
+                    // Konuşmacının konuştuğu cümle boyunca ses dosyalarını server'a göndermek için kullanılıyor.
+                    if(wordLength > tempWordCount)
+                    {
+                        recorder.exportWAV(function (blob) {
+                            postToServer(blob);
+                        });
+
+                        tempWordCount = wordLength;
                     }
                 };
                 
                 recognition.onstart = function () {
-                    flag = false;
                     recognition.interimResults = true; // Konuşma metnini anlık olarak kelime kelime almak için ayar yapılıyor.
+                };
+                
+                recognition.onerror = function (event) {
+                    if(String(event.error) == "no-speech") // Konuşma algılanamadığında
+                    {
+                        recordStatus.innerHTML = "Konuşma algılanamadı.";
+                    }
                 };
 
                 recognition.onend = function () {
-                    flag = false;
-
                     // Konuşma bittiğinde kayıt işlemi tekrar başlatılıyor.
                     recognition.start();
 
-                    recorder = new Recorder(input, { numChannels: 1 });
+                    recorder.clear();
                     recorder.record();
+
+                    tempWordCount = 0;
                 };
 
                 recognition.start();
@@ -158,14 +174,15 @@ function changeEnable()
 */
 function postToServer(blob) {
     var xhr = new XMLHttpRequest();
-    
+
     // Server'dan dönen cevap alındığında yapılacak işlemler.
     xhr.onload = function (e) {
         if (this.readyState === 4) // cevap başarılı ise
         { 
             // Cevap json formatında olduğu için parse edilir ve recordStatus alanına yazılır.
             var data = JSON.parse(e.target.responseText);
-            recordStatus.innerHTML = "Tahmin Edilen Konuşmacı: " + data["result"];
+            prediction = data["result"];
+            recordStatus.innerHTML = "Tahmin Edilen Konuşmacı: " + prediction
         }
     }
 
