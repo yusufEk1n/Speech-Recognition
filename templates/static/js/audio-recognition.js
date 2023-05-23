@@ -4,62 +4,79 @@ var gumStream;
 var input;
 
 var AudioContext = window.AudioContext || window.webkitAudioContext;
-var audioContext
+var audioContext;
 
 var recordButton = document.querySelector("#recordButton");
 var stopButton = document.querySelector("#stopButton");
-var recordStatus = document.querySelector("#recordStatus")
-var text = document.querySelector("#text")
+var recordStatus = document.querySelector("#recordStatus");
+var text = document.querySelector("#text");
 
 var model = false;
 
 var recognition;
 var recorder;
 
+/*
+    * Bu event listener ile kayıt butonuna basıldığında kayıt işlemi başlar.
+    * Kayıt edilen ses dosyası metne çevrilir.
+    * Kayıt edilen ses dosyası tanınması için server'a gönderilir.
+*/
 recordButton.addEventListener("click", function () {
 
-    if (model == true) {
+    if (model == true) // Model yüklü ise
+    {
         changeEnable();
+
+        // Kayıt için izin istenir.
         navigator.mediaDevices.getUserMedia({ audio: true, video: false })
             .then(function (stream) {
+                
+                // Bu değşken kelime sayısını kontrol etmek için kullanılıyor.
+                var flag = false;
 
-                var isRead = false;
-
+                // Ses kaydı için gerekli değişkenler tanımlanıyor.
                 audioContext = new AudioContext();
                 gumStream = stream;
                 input = audioContext.createMediaStreamSource(stream);
 
-                recorder = new Recorder(input, { numChannels: 1 })
-
+                // Sesi kayıt etmek için ve Sesi metne çevirmek için kullanılan değişken tanımlanıyor.
+                recorder = new Recorder(input, { numChannels: 1 });
                 recognition = new webkitSpeechRecognition();
+                
+                // Türkçe tanıma yapılması için dil ayarı yapılıyor.
                 recognition.lang = "tr-TR";
 
                 recognition.onresult = function (event) {
+
+                    // Konuşma metne çevrilir ve text alanına yazılır.
                     var recognizedText = event.results[0][0].transcript;
                     text.innerHTML = recognizedText;
-
-                    if (recognizedText.split(" ").length > 1 && isRead == false) {
-                        isRead = true;
-                        recorder.stop()
-                        recorder.exportWAV(postToServer)
+                    
+                    // Konuşma metni 1 kelimeden fazla ise tahmin edilmek için server'a gönderilir.
+                    if (recognizedText.split(" ").length > 1 && flag == false) {
+                        flag = true;
+                        recorder.stop();
+                        recorder.exportWAV(postToServer);
                     }
                 };
-
+                
                 recognition.onstart = function () {
-                    isRead = false;
-                    recognition.interimResults = true;
+                    flag = false;
+                    recognition.interimResults = true; // Konuşma metnini anlık olarak kelime kelime almak için ayar yapılıyor.
                 };
 
                 recognition.onend = function () {
-                    isRead = false;
+                    flag = false;
+
+                    // Konuşma bittiğinde kayıt işlemi tekrar başlatılıyor.
                     recognition.start();
 
-                    recorder = new Recorder(input, { numChannels: 1 })
-                    recorder.record()
+                    recorder = new Recorder(input, { numChannels: 1 });
+                    recorder.record();
                 };
 
                 recognition.start();
-                recorder.record()
+                recorder.record();
             })
             .catch(function (err) {
                 recordButton.disabled = false;
@@ -67,16 +84,20 @@ recordButton.addEventListener("click", function () {
                 console.log(err);
             });
     }
-    else {
-        recordStatus.innerHTML = "Model yüklenemedi."
+    else 
+    {
+        recordStatus.innerHTML = "Model yüklenemedi.";
 
         sleep(1500).then(() => {
-            recordStatus.innerHTML = "..."
+            recordStatus.innerHTML = "...";
         });
     }
 });
 
-
+/*
+    * Bu event listener ile durdur butonuna basıldığında kayıt işlemi durdurulur.
+    * Kayıt için gerekli değişkenler null değerine atanır.
+*/
 stopButton.addEventListener("click", function () {
 
     changeEnable();
@@ -99,13 +120,16 @@ stopButton.addEventListener("click", function () {
         recognition = null;
     }
 
-    recordStatus.innerHTML = "..."
-    text.innerHTML = "..."
+    recordStatus.innerHTML = "...";
+    text.innerHTML = "...";
 });
 
-
+// Bu fonksiyon ile belirtilen süre kadar beklenir.
 const sleep = time => new Promise(resolve => timeoutId = setTimeout(resolve, time));
 
+/*
+    * Bu fonksiyon ile sayfa yüklendiğinde model yüklü mü kontrolü yapılır.
+*/
 window.onload = function () {
     $.ajax({
         url: "/modelIsThere",
@@ -119,24 +143,39 @@ window.onload = function () {
     });
 }
 
-
-function changeEnable() {
+/*
+    * Bu fonksiyon ile kayıt ve durdur butonlarının aktiflik durumu değiştirilir.
+*/
+function changeEnable() 
+{
     recordButton.disabled = !recordButton.disabled;
     stopButton.disabled = !stopButton.disabled;
 }
 
+/*
+    * Bu fonksiyon ile kayıt edilen ses dosyası server'a gönderilir.
+    * Server'dan dönen tahmin edilen konuşmacı adı recordStatus alanına yazılır.
+*/
 function postToServer(blob) {
     var xhr = new XMLHttpRequest();
     
+    // Server'dan dönen cevap alındığında yapılacak işlemler.
     xhr.onload = function (e) {
-        if (this.readyState === 4) {
+        if (this.readyState === 4) // cevap başarılı ise
+        { 
+            // Cevap json formatında olduğu için parse edilir ve recordStatus alanına yazılır.
             var data = JSON.parse(e.target.responseText);
             recordStatus.innerHTML = "Tahmin Edilen Konuşmacı: " + data["result"];
         }
     }
 
+    // Server'a gönderilecek form oluşturuluyor.
     var fd = new FormData();
+
+    // Form'a kayıt edilen ses dosyası ekleniyor.
     fd.append("audio_data", blob, "filename.wav");
+
+    // Server'a post işlemi yapılıyor.
     xhr.open("POST", "/postSound", true);
     xhr.send(fd);
 }
