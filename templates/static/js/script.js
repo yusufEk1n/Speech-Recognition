@@ -1,3 +1,7 @@
+/*
+ * Bu script ile sayfa büyütüldüğünde yatay scrool barı görünür hale getiriyoruz.
+ * Sayfa küçültüldüğünde ise yatay scrool barı gizliyoruz.
+*/
 window.onresize = function () {
 	var zoomLevel = window.devicePixelRatio;
 
