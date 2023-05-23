@@ -5,6 +5,7 @@ import pickle
 import numpy as np
 import io
 import pandas as pd
+from collections import Counter
 
 
 app = Flask(__name__)
@@ -88,7 +89,9 @@ def postSound():
 
             result = model.predict(features)
 
-            return jsonify(result.tolist())
+            result = Counter(result).most_common(1)[0][0]
+
+            return jsonify({'result': result})
         else:
             return jsonify({'error': 'error'})
     except Exception as e:
