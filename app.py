@@ -9,12 +9,16 @@ from collections import Counter
 
 
 app = Flask(__name__)
+
+# templates/static/ dizinini statik dosyaların bulunduğu dizin olarak belirle
 app.static_folder = os.path.abspath(path="templates/static/")
 
 model = None
 
+# Eğer eğitilmiş model varsa yükle
 if os.path.exists(os.path.join('ML', 'training_models', 'finalized_model.sav')):
     model = pickle.load(open(os.path.join('ML', 'training_models', 'finalized_model.sav'), 'rb'))
+
 
 @app.route("/", methods=["GET"])
 def index():
@@ -35,26 +39,37 @@ def modelIsThere():
     else:
         return jsonify({'message': 'error'})
 
-
+'''
+>>> Açıklama
+>>> --------
+>>> Bu endpoint, eğitilmek üzere gönderilen ses dosyalarını kaydeder.
+'''
 @app.route("/saveAudio", methods=['POST', 'GET'])
 def saveAudio():
     try:
         audio_data = request.files['audio_data']
+
+        # gelen ses dosyasından isim bilgisini al
         filename = audio_data.filename
         name = filename.split('-')[0]
 
+        # eğer ML dizini yoksa oluştur
         if not os.path.exists(os.path.join('ML', 'training_set')):
             os.makedirs(os.path.join('ML', 'training_set'))
 
+        # eğer böyle bir isimde klasör yoksa oluştur
         if not os.path.exists(os.path.join('ML', 'training_set', name)):
             os.makedirs(os.path.join('ML', 'training_set', name))
 
+        # ses dosyasının kaydedileceği yol
         WAVE_PATH = os.path.join('ML', 'training_set', name, filename)
 
+        # bu ses dosyasının yolunu trainedfilelist.txt dosyasına kaydet
         trainedfilelist = open(os.path.join('ML', 'trainedfilelist.txt'), 'a')
         trainedfilelist.write(WAVE_PATH + '\n')
         trainedfilelist.close()
 
+        # ses dosyasını WAVE_PATH yoluna kaydet
         audio_data.save(WAVE_PATH)
 
         return jsonify({'message': 'success'})
@@ -63,6 +78,11 @@ def saveAudio():
         return jsonify({'error': str(e)})
 
 
+'''
+>>> Açıklama
+>>> --------
+>>> Bu endpoint, tahmin edilmek üzere gönderilen ses dosyasını model üzerinden tahmin eder.
+'''
 @app.route("/postSound", methods=['POST', 'GET'])
 def postSound():
     try:
@@ -71,10 +91,14 @@ def postSound():
             filename = f.filename
 
             features = []
+
+            # ses dosyasını yükle
             audio, rate = librosa.load(f)
 
+            # ses dosyasının başındaki ve sonundaki boşlukları kaldır
             y_trimmed, _ = librosa.effects.trim(audio, top_db=20)
 
+            # ses dosyası çok kısa ise tahmin etme
             if len(y_trimmed) < 4410:
                 return jsonify("")
 
@@ -85,10 +109,13 @@ def postSound():
                     comph_mfccs = feature_extraction(y_trimmed[i:i+4410], rate)
                     features.append(comph_mfccs)
 
+            # çıkarılan mfcc'leri numpy dizisine çevir ve tahmin edilmeye hazır hale getir                        
             features = np.array(features).reshape(len(features), -1)
 
+            # tahmin et
             result = model.predict(features)
 
+            # olası ihtimalleri say ve en çok olanı döndür
             result = Counter(result).most_common(1)[0][0]
 
             return jsonify({'result': result})
@@ -97,6 +124,14 @@ def postSound():
     except Exception as e:
         return jsonify({'error': str(e)})
 
+'''
+>>> Açıklama
+>>> --------
+>>> Bu fonksiyon ile ses dosyalarından öznitelik çıkarılır.
+>>> Öznitelik çıkarımı için MFCC kullanılır.
+>>> MFCC'lerin delta ve delta2'leri de hesaplanır.
+>>> Son olarak bu değerler birleştirilir ve geri döndürülür.
+'''
 def feature_extraction(audio, rate):
     mfccs = librosa.feature.mfcc(y=audio, sr=rate, n_mfcc=13)
     delta_mfccs = librosa.feature.delta(mfccs)
